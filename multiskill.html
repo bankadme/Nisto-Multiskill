@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NISTO Multi-Skill</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary: #1a5276;
+  --primary-light: #2980b9;
+  --primary-bg: #eaf2f8;
+  --success: #27ae60;
+  --success-bg: #eafaf1;
+  --warning: #f39c12;
+  --warning-bg: #fef9e7;
+  --danger: #e74c3c;
+  --danger-bg: #fdedec;
+  --gray-50: #f8f9fa;
+  --gray-100: #f1f3f5;
+  --gray-200: #e9ecef;
+  --gray-300: #dee2e6;
+  --gray-400: #ced4da;
+  --gray-500: #adb5bd;
+  --gray-600: #868e96;
+  --gray-700: #495057;
+  --gray-800: #343a40;
+  --gray-900: #212529;
+  --radius: 10px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.08);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.12);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: 'IBM Plex Sans Thai', sans-serif;
+  background: var(--gray-100);
+  color: var(--gray-800);
+  min-height: 100vh;
+  font-size: 15px;
+}
+
+/* ===== ROLE SELECTION ===== */
+#roleSelect {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 100vh; padding: 20px;
+  background: linear-gradient(135deg, #1a5276 0%, #2980b9 50%, #1abc9c 100%);
+}
+#roleSelect h1 {
+  color: #fff; font-size: 28px; margin-bottom: 8px; font-weight: 700;
+}
+#roleSelect .subtitle {
+  color: rgba(255,255,255,0.8); font-size: 15px; margin-bottom: 36px;
+}
+.role-cards { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; max-width: 720px; }
+.role-card {
+  background: #fff; border-radius: 16px; padding: 28px 24px;
+  width: 210px; text-align: center; cursor: pointer;
+  transition: all 0.2s; box-shadow: var(--shadow-lg);
+  border: 3px solid transparent;
+}
+.role-card:hover { transform: translateY(-4px); border-color: var(--primary-light); }
+.role-card .icon { font-size: 40px; margin-bottom: 12px; }
+.role-card h3 { font-size: 17px; font-weight: 600; margin-bottom: 6px; color: var(--gray-800); }
+.role-card p { font-size: 13px; color: var(--gray-600); line-height: 1.5; }
+
+/* ===== MAIN APP ===== */
+#app { display: none; }
+.topbar {
+  background: var(--primary); color: #fff; padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between;
+  position: sticky; top: 0; z-index: 100;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.topbar h2 { font-size: 17px; font-weight: 600; }
+.topbar .role-badge {
+  background: rgba(255,255,255,0.2); padding: 4px 12px;
+  border-radius: 20px; font-size: 13px;
+}
+.topbar .btn-logout {
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  padding: 6px 14px; border-radius: 8px; cursor: pointer; font-size: 13px;
+  font-family: inherit;
+}
+.topbar .btn-logout:hover { background: rgba(255,255,255,0.3); }
+
+/* Tabs */
+.tabs {
+  display: flex; background: #fff; border-bottom: 1px solid var(--gray-200);
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  padding: 0 12px;
+}
+.tab-btn {
+  padding: 12px 18px; border: none; background: none;
+  font-size: 14px; font-weight: 500; color: var(--gray-600);
+  cursor: pointer; white-space: nowrap; border-bottom: 3px solid transparent;
+  font-family: inherit; transition: all 0.2s;
+}
+.tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-btn:hover { color: var(--primary); }
+
+/* Content area */
+.content { padding: 16px; max-width: 1200px; margin: 0 auto; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* Cards */
+.card {
+  background: #fff; border-radius: var(--radius); padding: 20px;
+  margin-bottom: 16px; box-shadow: var(--shadow);
+}
+.card h3 {
+  font-size: 16px; font-weight: 600; margin-bottom: 14px;
+  color: var(--gray-800); display: flex; align-items: center; gap: 8px;
+}
+
+/* Form elements */
+label { display: block; font-size: 13px; font-weight: 500; color: var(--gray-600); margin-bottom: 4px; }
+select, input[type="text"], input[type="date"], input[type="number"] {
+  width: 100%; padding: 10px 12px; border: 1.5px solid var(--gray-300);
+  border-radius: 8px; font-size: 15px; font-family: inherit;
+  background: #fff; color: var(--gray-800); transition: border-color 0.2s;
+}
+select:focus, input:focus { outline: none; border-color: var(--primary-light); }
+.form-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.form-row > * { flex: 1; min-width: 140px; }
+
+/* Buttons */
+.btn {
+  padding: 10px 20px; border: none; border-radius: 8px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  font-family: inherit; transition: all 0.2s; display: inline-flex;
+  align-items: center; gap: 6px;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-success:hover { background: #219a52; }
+.btn-warning { background: var(--warning); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-outline {
+  background: #fff; color: var(--primary); border: 1.5px solid var(--primary);
+}
+.btn-outline:hover { background: var(--primary-bg); }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+
+/* Tables — FIX #1: จำกัดความสูง scroll ได้สะดวก */
+.table-wrap {
+  overflow: auto; -webkit-overflow-scrolling: touch;
+  max-height: 70vh; border: 1px solid var(--gray-200); border-radius: 8px;
+}
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--gray-200); }
+th { background: var(--gray-50); font-weight: 600; color: var(--gray-700); position: sticky; top: 0; z-index: 2; white-space: nowrap; }
+tr:hover { background: var(--primary-bg); }
+
+/* Skill badges */
+.skill-badge {
+  display: inline-block; padding: 2px 8px; border-radius: 12px;
+  font-size: 12px; font-weight: 600; min-width: 45px; text-align: center;
+}
+.skill-0 { background: var(--gray-200); color: var(--gray-500); }
+.skill-25 { background: #fdebd0; color: #e67e22; }
+.skill-50 { background: #fef9e7; color: #f39c12; }
+.skill-75 { background: #d5f5e3; color: #27ae60; }
+.skill-100 { background: #abebc6; color: #1e8449; }
+
+/* Status badges */
+.status { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.status-training { background: var(--primary-bg); color: var(--primary); }
+.status-passed { background: var(--success-bg); color: var(--success); }
+.status-failed { background: var(--danger-bg); color: var(--danger); }
+.status-continue { background: var(--warning-bg); color: #e67e22; }
+
+/* Match score bar */
+.match-bar {
+  height: 8px; background: var(--gray-200); border-radius: 4px;
+  overflow: hidden; width: 80px; display: inline-block; vertical-align: middle;
+}
+.match-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+
+/* Stats cards */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.stat-card {
+  background: #fff; border-radius: var(--radius); padding: 16px;
+  box-shadow: var(--shadow); text-align: center;
+}
+.stat-card .num { font-size: 28px; font-weight: 700; color: var(--primary); }
+.stat-card .lbl { font-size: 12px; color: var(--gray-600); margin-top: 2px; }
+
+/* Loading */
+.loading {
+  display: flex; align-items: center; justify-content: center;
+  padding: 40px; color: var(--gray-500);
+}
+.spinner {
+  width: 24px; height: 24px; border: 3px solid var(--gray-200);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin 0.8s linear infinite; margin-right: 10px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+  background: var(--gray-800); color: #fff; padding: 12px 24px;
+  border-radius: 10px; font-size: 14px; z-index: 9999;
+  box-shadow: var(--shadow-lg); opacity: 0; transition: opacity 0.3s;
+  pointer-events: none; max-width: 90vw; text-align: center;
+}
+.toast.show { opacity: 1; }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+
+/* Shift alert */
+.shift-alert {
+  background: #fff3cd; border: 2px solid #ffc107; border-radius: 10px;
+  padding: 14px 18px; margin: 12px 0; font-size: 14px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.shift-alert .icon { font-size: 22px; flex-shrink: 0; }
+
+/* Modal */
+.modal-overlay {
+  display: none; position: fixed; top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.5); z-index: 200;
+  align-items: center; justify-content: center; padding: 20px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 16px; padding: 24px;
+  max-width: 560px; width: 100%; max-height: 85vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+}
+.modal h3 { margin-bottom: 16px; font-size: 18px; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .role-card { width: 100%; max-width: 300px; }
+  .form-row { flex-direction: column; }
+  .form-row > * { min-width: 100%; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .content { padding: 12px; }
+  .tab-btn { padding: 10px 14px; font-size: 13px; }
+}
+
+/* Empty state */
+.empty { text-align: center; padding: 40px 20px; color: var(--gray-500); }
+.empty .icon { font-size: 48px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ===== ROLE SELECTION — FIX #5: เปลี่ยนชื่อ ===== -->
+<div id="roleSelect">
+  <h1>🏭 NISTO Multi-Skill</h1>
+  <p class="subtitle">ระบบจัดกำลังคนและทักษะพนักงาน</p>
+  <div class="role-cards">
+    <div class="role-card" onclick="selectRole('supervisor')">
+      <div class="icon">👷</div>
+      <h3>หัวหน้างาน</h3>
+      <p>กรอกข้อมูลย้ายแผนก<br>สำหรับจัดกำลังคนรายวัน</p>
+    </div>
+    <div class="role-card" onclick="selectRole('manager')">
+      <div class="icon">📊</div>
+      <h3>จัดกำลังคน</h3>
+      <p>ดู Skill Matrix วิเคราะห์ Gap<br>เลือกคนย้ายอย่างมีข้อมูล</p>
+    </div>
+    <div class="role-card" onclick="selectRole('hr')">
+      <div class="icon">🗂️</div>
+      <h3>HR</h3>
+      <p>เข้าถึงทุกฟังก์ชัน<br>Transfer Log / แผน Multi-Skill</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <h2>🏭 NISTO Multi-Skill</h2>
+      <span class="role-badge" id="roleBadge"></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="btn-logout" id="btnSheet" onclick="openSheet()" style="display:none;">📋 เปิด Sheet</button>
+      <button class="btn-logout" onclick="logout()">เปลี่ยนบทบาท</button>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabsContainer"></div>
+
+  <div class="content">
+    <!-- PAGE: จัดกำลังคน (Transfer) -->
+    <div class="page" id="page-transfer">
+      <div class="card">
+        <h3>📋 ย้ายแผนกรายวัน</h3>
+        <div class="form-row">
+          <div>
+            <label>วันที่</label>
+            <input type="date" id="tfDate">
+          </div>
+          <div>
+            <label>แผนกต้นทาง</label>
+            <select id="tfFromDept" onchange="onFromDeptChange()">
+              <option value="">-- เลือกแผนก --</option>
+            </select>
+          </div>
+          <div>
+            <label>แผนกปลายทาง</label>
+            <select id="tfToDept" onchange="onToDeptChange()">
+              <option value="">-- เลือกแผนก --</option>
+            </select>
+          </div>
+        </div>
+        <!-- FIX #2: เปลี่ยนจากชื่อ → รหัสพนักงาน -->
+        <div id="tfRecorderRow" class="form-row" style="display:none;">
+          <div>
+            <label>รหัสผู้บันทึก</label>
+            <input type="text" id="tfRecorder" placeholder="รหัสพนักงานผู้บันทึก" inputmode="numeric">
+          </div>
+          <div>
+            <label>หมายเหตุ</label>
+            <input type="text" id="tfNote" placeholder="หมายเหตุ (ถ้ามี)">
+          </div>
+        </div>
+        <!-- FIX #6: แจ้งเตือนกะ -->
+        <div id="shiftAlert" style="display:none;"></div>
+      </div>
+
+      <div id="tfEmployeeList"></div>
+    </div>
+
+    <!-- PAGE: Skill Matrix -->
+    <div class="page" id="page-skills">
+      <div class="card">
+        <h3>📊 Skill Matrix</h3>
+        <div class="form-row">
+          <div>
+            <label>กรองตามแผนก</label>
+            <select id="smDept" onchange="loadSkillMatrix()">
+              <option value="">-- ทุกแผนก --</option>
+            </select>
+          </div>
+          <div>
+            <label>กรองตามทักษะแผนก</label>
+            <select id="smSkillDept" onchange="loadSkillMatrix()">
+              <option value="">-- ทุกทักษะ --</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div id="smResult"></div>
+    </div>
+
+    <!-- PAGE: Skill Gap Analysis -->
+    <div class="page" id="page-gap">
+      <div class="card">
+        <h3>🔍 วิเคราะห์ Skill Gap</h3>
+        <p style="color:var(--gray-600);font-size:13px;margin-bottom:16px;">
+          ดูว่าคนไหน skill รวมน้อย และแผนกไหนขาดคนที่ทำเป็น
+        </p>
+      </div>
+      <div id="gapResult"></div>
+    </div>
+
+    <!-- PAGE: Transfer Log (HR) -->
+    <div class="page" id="page-log">
+      <div class="card">
+        <h3>📝 Transfer Log</h3>
+        <div class="form-row">
+          <div>
+            <label>จากวันที่</label>
+            <input type="date" id="logFrom">
+          </div>
+          <div>
+            <label>ถึงวันที่</label>
+            <input type="date" id="logTo">
+          </div>
+          <div style="display:flex;align-items:flex-end;">
+            <button class="btn btn-primary" onclick="loadTransferLog()">ค้นหา</button>
+          </div>
+        </div>
+      </div>
+      <div id="logResult"></div>
+    </div>
+
+    <!-- PAGE: Multi-Skill Plan -->
+    <div class="page" id="page-plan">
+      <div class="card">
+        <h3>📅 แผน Multi-Skill</h3>
+        <div class="form-row">
+          <div>
+            <label>รอบ</label>
+            <select id="planRound" onchange="loadMultiSkillPlan()">
+              <option value="">-- ทุกรอบ --</option>
+            </select>
+          </div>
+          <div>
+            <label>สถานะ</label>
+            <select id="planStatus" onchange="loadMultiSkillPlan()">
+              <option value="">-- ทั้งหมด --</option>
+              <option value="กำลังฝึก">กำลังฝึก</option>
+              <option value="ผ่านแล้ว">ผ่านแล้ว</option>
+              <option value="ฝึกต่อ">ฝึกต่อ</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:8px;">
+            <button class="btn btn-primary" onclick="showAddPlanModal()">+ เพิ่มแผน</button>
+          </div>
+        </div>
+      </div>
+      <div id="planResult"></div>
+    </div>
+
+    <!-- PAGE: Evaluate (HR) — FIX #3: ประเมินรายทักษะ -->
+    <div class="page" id="page-eval">
+      <div class="card">
+        <h3>✅ ประเมิน Multi-Skill</h3>
+        <p style="color:var(--gray-600);font-size:13px;margin-bottom:16px;">
+          กรอก % ทักษะรายตัว แล้วกดตัดสินผล (ผ่าน / ฝึกต่อ) เอง
+        </p>
+      </div>
+      <div id="evalResult"></div>
+    </div>
+
+    <!-- PAGE: Dashboard -->
+    <div class="page" id="page-dashboard">
+      <div id="dashboardResult"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== MODAL ===== -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const API_URL = 'https://script.google.com/macros/s/AKfycbwx3_7CO8rstpXf2smxc65-gzUEzGdK39pqEtwGqfIOvdRnLWo7hhoYXWUwl9whktjR/exec';
+
+// FIX #4: ลิงก์ Google Sheet สำหรับ HR — ใส่ URL Sheet จริงตรงนี้
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ccxDRE9SO-BRVsHif-4LncD6oXwFBp_ZZic2qPSS0TU/edit?gid=1436653187#gid=1436653187';
+
+// FIX #6: กะแต่ละแผนก
+const DEPT_SHIFT = {
+  'ฉีดยาง': 'PD',
+  'ผสมยาง': 'M1'
+  // แผนกอื่นทั้งหมด = A1
+};
+function getShift(dept) { return DEPT_SHIFT[dept] || 'A1'; }
+
+// ============================================================
+// STATE
+// ============================================================
+let currentRole = '';
+let departments = [];
+let skillHeaders = [];
+
+// ============================================================
+// ROLE MANAGEMENT — FIX #5: เปลี่ยนชื่อ
+// ============================================================
+const roleConfig = {
+  supervisor: {
+    label: 'หัวหน้างาน',
+    tabs: [
+      { id: 'transfer', label: '📋 ย้ายแผนก' }
+    ]
+  },
+  manager: {
+    label: 'จัดกำลังคน',
+    tabs: [
+      { id: 'transfer', label: '📋 ย้ายแผนก' },
+      { id: 'skills', label: '📊 Skill Matrix' },
+      { id: 'gap', label: '🔍 Skill Gap' },
+    ]
+  },
+  hr: {
+    label: 'HR',
+    tabs: [
+      { id: 'transfer', label: '📋 ย้ายแผนก' },
+      { id: 'skills', label: '📊 Skill Matrix' },
+      { id: 'gap', label: '🔍 Skill Gap' },
+      { id: 'log', label: '📝 Transfer Log' },
+      { id: 'plan', label: '📅 แผน Multi-Skill' },
+      { id: 'eval', label: '✅ ประเมิน' },
+      { id: 'dashboard', label: '📈 Dashboard' },
+    ]
+  }
+};
+
+function selectRole(role) {
+  currentRole = role;
+  localStorage.setItem('nisto_role', role);
+  document.getElementById('roleSelect').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('roleBadge').textContent = roleConfig[role].label;
+
+  // FIX #4: แสดงปุ่ม Sheet สำหรับ HR
+  document.getElementById('btnSheet').style.display = role === 'hr' ? '' : 'none';
+
+  // Build tabs
+  const tabs = roleConfig[role].tabs;
+  const container = document.getElementById('tabsContainer');
+  container.innerHTML = tabs.map((t, i) =>
+    `<button class="tab-btn ${i === 0 ? 'active' : ''}" onclick="switchTab('${t.id}', this)">${t.label}</button>`
+  ).join('');
+
+  // Show first page
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + tabs[0].id).classList.add('active');
+
+  initApp();
+}
+
+function logout() {
+  currentRole = '';
+  localStorage.removeItem('nisto_role');
+  document.getElementById('roleSelect').style.display = '';
+  document.getElementById('app').style.display = 'none';
+}
+
+function openSheet() {
+  window.open(SHEET_URL, '_blank');
+}
+
+function switchTab(pageId, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pageId).classList.add('active');
+
+  if (pageId === 'skills') loadSkillMatrix();
+  if (pageId === 'gap') loadGapAnalysis();
+  if (pageId === 'log') loadTransferLog();
+  if (pageId === 'plan') loadMultiSkillPlan();
+  if (pageId === 'eval') loadEvaluation();
+  if (pageId === 'dashboard') loadDashboard();
+}
+
+
+// ============================================================
+// API HELPER
+// ============================================================
+async function api(action, params = {}) {
+  try {
+    const resp = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action, ...params })
+    });
+    const data = await resp.json();
+    if (data.status === 'error') throw new Error(data.message);
+    return data.data;
+  } catch (err) {
+    console.error('API Error:', err);
+    showToast(err.message || 'เกิดข้อผิดพลาด', 'error');
+    throw err;
+  }
+}
+
+
+// ============================================================
+// INIT
+// ============================================================
+async function initApp() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('tfDate').value = today;
+
+  try {
+    departments = await api('getDepartments');
+    populateDeptSelects();
+    skillHeaders = await api('getSkillHeaders');
+  } catch (e) {
+    console.error('Init error:', e);
+  }
+}
+
+function populateDeptSelects() {
+  const selects = ['tfFromDept', 'tfToDept', 'smDept', 'smSkillDept'];
+  selects.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const firstOpt = el.options[0].outerHTML;
+    el.innerHTML = firstOpt + departments.map(d =>
+      `<option value="${d}">${d}</option>`
+    ).join('');
+  });
+}
+
+
+// ============================================================
+// PAGE: TRANSFER — FIX #2 + #6
+// ============================================================
+function onFromDeptChange() {
+  checkShiftAndLoad();
+}
+
+function onToDeptChange() {
+  checkShiftAndLoad();
+}
+
+function checkShiftAndLoad() {
+  const from = document.getElementById('tfFromDept').value;
+  const to = document.getElementById('tfToDept').value;
+  const alertDiv = document.getElementById('shiftAlert');
+
+  alertDiv.style.display = 'none';
+  alertDiv.innerHTML = '';
+
+  if (!from || !to) {
+    document.getElementById('tfEmployeeList').innerHTML = '';
+    return;
+  }
+  if (from === to) {
+    showToast('แผนกต้นทางและปลายทางต้องไม่เหมือนกัน', 'error');
+    return;
+  }
+
+  // FIX #6: ตรวจกะ
+  const shiftFrom = getShift(from);
+  const shiftTo = getShift(to);
+  if (shiftFrom !== shiftTo) {
+    alertDiv.style.display = 'block';
+    alertDiv.innerHTML = `<div class="shift-alert">
+      <span class="icon">⚠️</span>
+      <div>
+        <strong>กะเปลี่ยน!</strong> ${from} (${shiftFrom}) → ${to} (${shiftTo})<br>
+        <span style="color:var(--danger);font-weight:600;">HR ต้องไปเปลี่ยนกะในโปรแกรมเงินเดือนด้วย</span>
+      </div>
+    </div>`;
+  }
+
+  document.getElementById('tfRecorderRow').style.display = 'flex';
+  loadTransferCandidates();
+}
+
+async function loadTransferCandidates() {
+  const from = document.getElementById('tfFromDept').value;
+  const to = document.getElementById('tfToDept').value;
+  const container = document.getElementById('tfEmployeeList');
+
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลด...</div>';
+
+  try {
+    if (currentRole === 'supervisor') {
+      const emps = await api('getEmployeesByDept', { dept: from });
+      container.innerHTML = renderSimpleEmployeeList(emps, from, to);
+    } else {
+      const data = await api('getSkillsForTransfer', { fromDept: from, toDept: to });
+      container.innerHTML = renderTransferCandidates(data, from, to);
+    }
+  } catch (e) {
+    container.innerHTML = '<div class="empty">ไม่สามารถโหลดข้อมูลได้</div>';
+  }
+}
+
+function renderSimpleEmployeeList(employees, from, to) {
+  if (!employees.length) return '<div class="card empty"><div class="icon">👤</div>ไม่มีพนักงานในแผนกนี้</div>';
+
+  let html = '<div class="card"><h3>👤 เลือกพนักงานที่จะย้าย</h3>';
+  html += '<div class="table-wrap"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th></th></tr></thead><tbody>';
+  employees.forEach(emp => {
+    html += `<tr>
+      <td>${emp.id}</td>
+      <td>${emp.name}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="confirmTransfer('${emp.id}','${esc(emp.name)}','${esc(from)}','${esc(to)}')">ย้าย →</button></td>
+    </tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  return html;
+}
+
+function renderTransferCandidates(data, from, to) {
+  const { employees, targetSkills } = data;
+  if (!employees.length) return '<div class="card empty"><div class="icon">👤</div>ไม่มีพนักงานในแผนกนี้</div>';
+
+  let html = `<div class="card">
+    <h3>👤 พนักงานจาก "${from}" — เรียงตาม skill ที่ตรงกับ "${to}"</h3>
+    <p style="color:var(--gray-600);font-size:13px;margin-bottom:12px;">
+      ทักษะของแผนก ${to}: ${targetSkills.length} ทักษะ
+    </p>
+    <div class="table-wrap"><table>
+    <thead><tr>
+      <th>รหัส</th><th>ชื่อ</th><th>Skill ตรง</th><th>ระดับเฉลี่ย</th><th>Match</th><th></th>
+    </tr></thead><tbody>`;
+
+  employees.forEach(emp => {
+    const matchColor = emp.matchScore >= 50 ? 'var(--success)' : emp.matchScore > 0 ? 'var(--warning)' : 'var(--gray-400)';
+    html += `<tr>
+      <td>${emp.id}</td>
+      <td>${emp.name}</td>
+      <td>${emp.targetSkillCount}/${emp.targetSkillTotal}</td>
+      <td><span class="skill-badge skill-${getSkillClass(emp.targetSkillAvg / 100)}">${emp.targetSkillAvg}%</span></td>
+      <td>
+        <div class="match-bar"><div class="match-bar-fill" style="width:${emp.matchScore}%;background:${matchColor}"></div></div>
+        <span style="font-size:12px;margin-left:4px;">${emp.matchScore}%</span>
+      </td>
+      <td><button class="btn btn-primary btn-sm" onclick="confirmTransfer('${emp.id}','${esc(emp.name)}','${esc(from)}','${esc(to)}')">ย้าย →</button></td>
+    </tr>`;
+  });
+
+  html += '</tbody></table></div></div>';
+  return html;
+}
+
+async function confirmTransfer(empId, empName, from, to) {
+  const date = document.getElementById('tfDate').value;
+  const recorder = document.getElementById('tfRecorder').value.trim();
+  const note = document.getElementById('tfNote').value;
+
+  if (!date) { showToast('กรุณาเลือกวันที่', 'error'); return; }
+  if (!recorder) { showToast('กรุณากรอกรหัสผู้บันทึก', 'error'); return; }
+
+  // FIX #6: เพิ่มข้อมูลกะใน note ถ้ากะเปลี่ยน
+  const shiftFrom = getShift(from);
+  const shiftTo = getShift(to);
+  let finalNote = note;
+  if (shiftFrom !== shiftTo) {
+    finalNote = `[กะเปลี่ยน: ${shiftFrom}→${shiftTo}] ${note}`.trim();
+  }
+
+  if (!confirm(`ยืนยันย้าย ${empName} (${empId})\nจาก: ${from} (${shiftFrom})\nไป: ${to} (${shiftTo})\nวันที่: ${date}${shiftFrom !== shiftTo ? '\n\n⚠️ กะเปลี่ยน! ต้องแก้โปรแกรมเงินเดือน' : ''}`)) return;
+
+  try {
+    await api('addTransfer', {
+      date, empId, empName, fromDept: from, toDept: to, recorder, note: finalNote
+    });
+    showToast(`บันทึกการย้าย ${empName} → ${to} สำเร็จ`, 'success');
+  } catch (e) {}
+}
+
+
+// ============================================================
+// PAGE: SKILL MATRIX — FIX #1: scroll ดีขึ้น
+// ============================================================
+async function loadSkillMatrix() {
+  const container = document.getElementById('smResult');
+  const dept = document.getElementById('smDept').value;
+  const skillDept = document.getElementById('smSkillDept').value;
+
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลด Skill Matrix...</div>';
+
+  // สีแต่ละแผนก (พื้น header / ตัวอักษร)
+  const DEPT_COLORS = {
+    'ผสมยาง':    { bg:'#e8f5e9', fg:'#2e7d32', col:'#f1f8f1' },
+    'ฉีดยาง':    { bg:'#e3f2fd', fg:'#1565c0', col:'#edf5fd' },
+    'ทากาว':     { bg:'#fff3e0', fg:'#e65100', col:'#fff8f0' },
+    'ยิงทราย':   { bg:'#fce4ec', fg:'#c62828', col:'#fdf0f3' },
+    'ตัดแต่ง':   { bg:'#f3e5f5', fg:'#7b1fa2', col:'#f8f0fa' },
+    'ขัดเจียร':  { bg:'#e0f2f1', fg:'#00695c', col:'#edf7f6' },
+    'ชุบ':       { bg:'#fff9c4', fg:'#f57f17', col:'#fffde7' },
+    'ประกอบ':    { bg:'#e1f5fe', fg:'#0277bd', col:'#eef8fe' },
+    'พ่นสี':     { bg:'#fbe9e7', fg:'#bf360c', col:'#fdf1ef' },
+    'แพ็คกิ้ง':  { bg:'#e8eaf6', fg:'#283593', col:'#f0f1fa' },
+    'คลังสินค้า': { bg:'#efebe9', fg:'#4e342e', col:'#f5f2f0' },
+    'LAB':       { bg:'#e0f7fa', fg:'#00838f', col:'#edfafb' },
+    'ซ่อมบำรุง':  { bg:'#f1f8e9', fg:'#558b2f', col:'#f6faf0' },
+  };
+  function getDeptColor(dept) { return DEPT_COLORS[dept] || { bg:'#f5f5f5', fg:'#616161', col:'#fafafa' }; }
+
+  try {
+    const data = await api('getSkillMatrix', { dept: dept || undefined });
+
+    if (!data.length) {
+      container.innerHTML = '<div class="card empty"><div class="icon">📊</div>ไม่มีข้อมูล</div>';
+      return;
+    }
+
+    let displaySkills = skillHeaders;
+    if (skillDept) {
+      displaySkills = skillHeaders.filter(s => s.dept === skillDept);
+    }
+
+    if (!displaySkills.length) {
+      container.innerHTML = '<div class="card empty">ไม่มีทักษะในแผนกที่เลือก</div>';
+      return;
+    }
+
+    // สร้าง header 2 แถว: แถว 1 = ชื่อแผนก (colspan), แถว 2 = ชื่อทักษะย่อย
+    // จัดกลุ่มทักษะตามแผนก
+    const groups = [];
+    let lastDept = '';
+    displaySkills.forEach(s => {
+      if (s.dept !== lastDept) {
+        groups.push({ dept: s.dept, skills: [s] });
+        lastDept = s.dept;
+      } else {
+        groups[groups.length - 1].skills.push(s);
+      }
+    });
+
+    let html = '<div class="card"><div class="table-wrap"><table>';
+
+    // Header row 1: แผนก groups
+    html += '<thead><tr>';
+    html += '<th rowspan="2" style="position:sticky;left:0;z-index:4;background:var(--gray-50);min-width:160px;">ชื่อ</th>';
+    html += '<th rowspan="2" style="z-index:3;background:var(--gray-50);">แผนก</th>';
+    html += '<th rowspan="2" style="z-index:3;background:var(--gray-50);">รวม</th>';
+    groups.forEach(g => {
+      const c = getDeptColor(g.dept);
+      html += `<th colspan="${g.skills.length}" style="text-align:center;background:${c.bg};color:${c.fg};font-size:12px;border-left:2px solid ${c.fg}30;padding:6px 4px;">${g.dept}</th>`;
+    });
+    html += '</tr>';
+
+    // Header row 2: ทักษะย่อย
+    html += '<tr>';
+    displaySkills.forEach((s, idx) => {
+      const c = getDeptColor(s.dept);
+      // เช็คว่าเป็นตัวแรกของกลุ่มไหม
+      const isFirst = idx === 0 || displaySkills[idx - 1].dept !== s.dept;
+      const border = isFirst ? `border-left:2px solid ${c.fg}30;` : '';
+      html += `<th style="font-size:10px;min-width:56px;padding:6px 4px;background:${c.bg};color:${c.fg};${border};text-align:center;">${s.skill}</th>`;
+    });
+    html += '</tr></thead>';
+
+    // Data rows
+    html += '<tbody>';
+    data.forEach(emp => {
+      html += `<tr>`;
+      html += `<td style="position:sticky;left:0;background:#fff;white-space:nowrap;font-size:13px;z-index:1;">${emp.name}</td>`;
+      html += `<td style="font-size:12px;">${emp.dept}</td>`;
+      html += `<td style="text-align:center;font-weight:600;">${emp.skillCount}</td>`;
+      displaySkills.forEach((s, idx) => {
+        const c = getDeptColor(s.dept);
+        const isFirst = idx === 0 || displaySkills[idx - 1].dept !== s.dept;
+        const border = isFirst ? `border-left:2px solid ${c.fg}15;` : '';
+        const val = emp.skills[s.fullName];
+        if (val) {
+          const pct = Math.round(val * 100);
+          html += `<td style="text-align:center;background:${c.col};${border}"><span class="skill-badge skill-${getSkillClass(val)}">${pct}</span></td>`;
+        } else {
+          html += `<td style="text-align:center;background:${c.col};${border};color:var(--gray-300);">-</td>`;
+        }
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody></table></div></div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
+}
+
+
+// ============================================================
+// PAGE: SKILL GAP ANALYSIS
+// ============================================================
+async function loadGapAnalysis() {
+  const container = document.getElementById('gapResult');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังวิเคราะห์...</div>';
+
+  try {
+    const dashboard = await api('getDashboard');
+
+    let html = '';
+
+    html += '<div class="card"><h3>⚠️ พนักงานที่มี Skill น้อยที่สุด (Bottom 20%)</h3>';
+    html += '<div class="table-wrap"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th>แผนก</th><th>จำนวนทักษะ</th></tr></thead><tbody>';
+    dashboard.lowSkillList.forEach(emp => {
+      html += `<tr><td>${emp.id}</td><td>${emp.name}</td><td>${emp.dept}</td>
+        <td><span class="skill-badge skill-${emp.skillCount <= 2 ? '25' : '50'}">${emp.skillCount} ทักษะ</span></td></tr>`;
+    });
+    html += '</tbody></table></div></div>';
+
+    html += '<div class="card"><h3>🏭 การครอบคลุม Skill รายแผนก (คนนอกแผนกที่ทำเป็น)</h3>';
+    html += '<p style="color:var(--gray-600);font-size:13px;margin-bottom:12px;">แผนกที่ coverage ต่ำ = ขาดคนจากแผนกอื่นที่สามารถมาช่วยได้</p>';
+    html += '<div class="table-wrap"><table><thead><tr><th>แผนก</th><th>จำนวนทักษะ</th><th>คนนอกที่ทำเป็น</th><th>Coverage</th></tr></thead><tbody>';
+
+    const sorted = [...dashboard.deptSkillCoverage].sort((a, b) => a.coveragePercent - b.coveragePercent);
+    sorted.forEach(d => {
+      const color = d.coveragePercent < 10 ? 'var(--danger)' : d.coveragePercent < 20 ? 'var(--warning)' : 'var(--success)';
+      html += `<tr><td>${d.dept}</td><td>${d.skillCount}</td><td>${d.outsidersCanDo} คน</td>
+        <td><div class="match-bar" style="width:120px;"><div class="match-bar-fill" style="width:${d.coveragePercent}%;background:${color}"></div></div>
+        <span style="font-size:12px;margin-left:4px;font-weight:600;">${d.coveragePercent}%</span></td></tr>`;
+    });
+    html += '</tbody></table></div></div>';
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
+}
+
+
+// ============================================================
+// PAGE: TRANSFER LOG — FIX #6: แสดงกะที่เปลี่ยน
+// ============================================================
+async function loadTransferLog() {
+  const container = document.getElementById('logResult');
+  const from = document.getElementById('logFrom').value;
+  const to = document.getElementById('logTo').value;
+
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลด...</div>';
+
+  try {
+    const data = await api('getTransferLog', { dateFrom: from, dateTo: to });
+
+    if (!data.length) {
+      container.innerHTML = '<div class="card empty"><div class="icon">📝</div>ไม่มีข้อมูลการย้ายในช่วงที่เลือก</div>';
+      return;
+    }
+
+    let html = '<div class="card"><div class="table-wrap"><table>';
+    html += '<thead><tr><th>วันที่</th><th>รหัส</th><th>ชื่อ</th><th>จาก</th><th>ไป</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead>';
+    html += '<tbody>';
+    data.forEach(row => {
+      const hasShiftChange = row.note && row.note.includes('[กะเปลี่ยน');
+      html += `<tr${hasShiftChange ? ' style="background:#fff3cd;"' : ''}>
+        <td style="white-space:nowrap;">${formatDate(row.date)}</td><td>${row.empId}</td><td>${row.empName}</td>
+        <td>${row.fromDept}</td><td style="font-weight:600;color:var(--primary);">${row.toDept}</td>
+        <td>${row.recorder}</td>
+        <td style="font-size:13px;">${hasShiftChange ? '⚠️ ' : ''}${row.note || ''}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div></div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
+}
+
+
+// ============================================================
+// PAGE: MULTI-SKILL PLAN — FIX #7: วันที่อ่านง่าย
+// ============================================================
+async function loadMultiSkillPlan() {
+  const container = document.getElementById('planResult');
+  const round = document.getElementById('planRound').value;
+  const status = document.getElementById('planStatus').value;
+
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลด...</div>';
+
+  try {
+    const data = await api('getMultiSkillPlan', { round, status });
+
+    if (!data.length) {
+      container.innerHTML = '<div class="card empty"><div class="icon">📅</div>ไม่มีข้อมูลแผน Multi-Skill</div>';
+      return;
+    }
+
+    const rounds = [...new Set(data.map(d => d.round))].filter(Boolean);
+    const roundSelect = document.getElementById('planRound');
+    if (roundSelect.options.length <= 1) {
+      rounds.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r; opt.textContent = formatDate(r);
+        roundSelect.appendChild(opt);
+      });
+    }
+
+    let html = '<div class="card"><div class="table-wrap"><table>';
+    html += '<thead><tr><th>รอบ</th><th>วันเริ่ม</th><th>รหัส</th><th>ชื่อ</th><th>แผนกเดิม</th><th>แผนกฝึก</th><th>สถานะ</th><th>คะแนน</th><th>ผล</th></tr></thead>';
+    html += '<tbody>';
+    data.forEach(row => {
+      const st = row.status || 'กำลังฝึก';
+      const statusClass = st === 'ผ่านแล้ว' ? 'status-passed' :
+                          st === 'ฝึกต่อ' ? 'status-continue' :
+                          st === 'กำลังฝึก' ? 'status-training' : '';
+      const resultClass = row.result === 'ผ่าน' ? 'status-passed' : row.result === 'ไม่ผ่าน' ? 'status-failed' : '';
+      const scoreText = row.score !== null && row.score !== undefined ? Math.round(row.score * 100) + '%' : '';
+      const resultText = row.result && row.result !== 'undefined' ? row.result : '';
+
+      html += `<tr>
+        <td style="white-space:nowrap;">${formatDate(row.round)}</td>
+        <td style="white-space:nowrap;">${formatDate(row.startDate)}</td>
+        <td>${row.empId}</td><td>${row.empName}</td>
+        <td>${row.fromDept}</td><td style="font-weight:600;">${row.toDept}</td>
+        <td><span class="status ${statusClass}">${st}</span></td>
+        <td style="text-align:center;">${scoreText ? '<span class="skill-badge skill-' + getSkillClass(row.score) + '">' + scoreText + '</span>' : '<span style="color:var(--gray-400);font-size:12px;">รอ</span>'}</td>
+        <td>${resultText ? '<span class="status ' + resultClass + '">' + resultText + '</span>' : '<span style="color:var(--gray-400);font-size:12px;">รอประเมิน</span>'}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div></div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
+}
+
+function showAddPlanModal() {
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = `
+    <h3>เพิ่มแผน Multi-Skill</h3>
+    <div style="margin-bottom:12px;">
+      <label>ชื่อรอบ</label>
+      <input type="text" id="modalRound" placeholder="เช่น รอบ 11/05/2569">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label>วันเริ่ม</label>
+      <input type="date" id="modalStartDate">
+    </div>
+    <div style="margin-bottom:12px;">
+      <label>แผนกต้นทาง</label>
+      <select id="modalFromDept" onchange="loadModalEmployees()">
+        <option value="">-- เลือก --</option>
+        ${departments.map(d => `<option value="${d}">${d}</option>`).join('')}
+      </select>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label>แผนกฝึก</label>
+      <select id="modalToDept">
+        <option value="">-- เลือก --</option>
+        ${departments.map(d => `<option value="${d}">${d}</option>`).join('')}
+      </select>
+    </div>
+    <div style="margin-bottom:12px;">
+      <label>เลือกพนักงาน</label>
+      <select id="modalEmployee"><option value="">-- โหลดจากแผนกต้นทาง --</option></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" onclick="closeModal()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="submitAddPlan()">เพิ่ม</button>
+    </div>
+  `;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+
+async function loadModalEmployees() {
+  const dept = document.getElementById('modalFromDept').value;
+  const select = document.getElementById('modalEmployee');
+  if (!dept) { select.innerHTML = '<option value="">-- เลือกแผนกก่อน --</option>'; return; }
+
+  const emps = await api('getEmployeesByDept', { dept });
+  select.innerHTML = '<option value="">-- เลือก --</option>' +
+    emps.map(e => `<option value="${e.id}" data-name="${esc(e.name)}">${e.id} - ${e.name}</option>`).join('');
+}
+
+async function submitAddPlan() {
+  const round = document.getElementById('modalRound').value;
+  const startDate = document.getElementById('modalStartDate').value;
+  const fromDept = document.getElementById('modalFromDept').value;
+  const toDept = document.getElementById('modalToDept').value;
+  const empSelect = document.getElementById('modalEmployee');
+  const empId = empSelect.value;
+  const empName = empSelect.selectedOptions[0]?.dataset?.name || '';
+
+  if (!round || !fromDept || !toDept || !empId) {
+    showToast('กรุณากรอกข้อมูลให้ครบ', 'error');
+    return;
+  }
+
+  try {
+    await api('addMultiSkillPlan', {
+      plans: [{ round, startDate, empId, empName, fromDept, toDept }]
+    });
+    showToast('เพิ่มแผนสำเร็จ', 'success');
+    closeModal();
+    loadMultiSkillPlan();
+  } catch (e) {}
+}
+
+
+// ============================================================
+// PAGE: EVALUATION — FIX #3: ประเมินรายทักษะ + HR ตัดสินเอง
+// ============================================================
+async function loadEvaluation() {
+  const container = document.getElementById('evalResult');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลด...</div>';
+
+  try {
+    const data = await api('getMultiSkillPlan', { status: 'กำลังฝึก' });
+    const data2 = await api('getMultiSkillPlan', { status: 'ฝึกต่อ' });
+    const all = [...data, ...data2];
+
+    if (!all.length) {
+      container.innerHTML = '<div class="card empty"><div class="icon">✅</div>ไม่มีพนักงานที่รอประเมิน</div>';
+      return;
+    }
+
+    let html = '<div class="card"><h3>รายชื่อพนักงานที่รอประเมิน</h3>';
+    html += '<p style="color:var(--gray-600);font-size:13px;margin-bottom:14px;">กดที่แถวเพื่อเปิดฟอร์มให้คะแนนรายทักษะ</p>';
+    html += '<div class="table-wrap"><table><thead><tr>';
+    html += '<th>รหัส</th><th>ชื่อ</th><th>แผนกเดิม</th><th>แผนกฝึก</th><th>สถานะ</th><th></th>';
+    html += '</tr></thead><tbody>';
+
+    all.forEach(row => {
+      const stClass = row.status === 'กำลังฝึก' ? 'status-training' : 'status-continue';
+      html += `<tr>
+        <td>${row.empId}</td><td>${row.empName}</td>
+        <td>${row.fromDept}</td><td style="font-weight:600;">${row.toDept}</td>
+        <td><span class="status ${stClass}">${row.status}</span></td>
+        <td><button class="btn btn-primary btn-sm" onclick="openEvalModal('${row.empId}','${esc(row.empName)}','${esc(row.toDept)}',${row.rowIndex})">ประเมิน</button></td>
+      </tr>`;
+    });
+
+    html += '</tbody></table></div></div>';
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
+}
+
+async function openEvalModal(empId, empName, toDept, rowIndex) {
+  const modal = document.getElementById('modalContent');
+  modal.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลดทักษะ...</div>';
+  document.getElementById('modalOverlay').classList.add('show');
+
+  // หาทักษะย่อยของแผนกฝึก
+  const deptSkills = skillHeaders.filter(s => s.dept === toDept);
+
+  // ดึง skill ปัจจุบันของคนนี้
+  let currentSkills = {};
+  try {
+    const empData = await api('getSkillMatrix', { empId });
+    if (empData.length > 0) currentSkills = empData[0].skills || {};
+  } catch(e) {}
+
+  let html = `<h3>ประเมิน: ${empName} (${empId})</h3>`;
+  html += `<p style="color:var(--gray-600);font-size:13px;margin-bottom:16px;">แผนกฝึก: <strong>${toDept}</strong> — ${deptSkills.length} ทักษะ</p>`;
+
+  if (!deptSkills.length) {
+    html += '<p style="color:var(--danger);">ไม่พบทักษะของแผนกนี้</p>';
+  } else {
+    html += '<table style="width:100%;margin-bottom:16px;"><thead><tr><th>ทักษะ</th><th>ค่าเดิม</th><th>ค่าใหม่</th></tr></thead><tbody>';
+    deptSkills.forEach(s => {
+      const cur = currentSkills[s.fullName];
+      const curPct = cur ? Math.round(cur * 100) + '%' : '-';
+      const curClass = cur ? 'skill-' + getSkillClass(cur) : '';
+      html += `<tr>
+        <td style="font-size:13px;">${s.skill}</td>
+        <td><span class="skill-badge ${curClass}">${curPct}</span></td>
+        <td>
+          <select id="eval-skill-${s.index}" style="width:90px;padding:6px;">
+            <option value="">ไม่เปลี่ยน</option>
+            <option value="0.25">25%</option>
+            <option value="0.5">50%</option>
+            <option value="0.75">75%</option>
+            <option value="1">100%</option>
+            <option value="0">ลบออก</option>
+          </select>
+        </td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+  }
+
+  html += `<div style="border-top:1px solid var(--gray-200);padding-top:16px;">
+    <label>ผลตัดสิน (HR ตัดสินเอง)</label>
+    <div style="display:flex;gap:10px;margin-top:8px;">
+      <button class="btn btn-success" onclick="submitEval('${empId}','${esc(toDept)}',${rowIndex},'ผ่านแล้ว','ผ่าน')" style="flex:1;">✅ ผ่าน</button>
+      <button class="btn btn-warning" onclick="submitEval('${empId}','${esc(toDept)}',${rowIndex},'ฝึกต่อ','ไม่ผ่าน')" style="flex:1;">🔄 ฝึกต่อ</button>
+    </div>
+  </div>`;
+
+  html += '<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">ยกเลิก</button></div>';
+
+  modal.innerHTML = html;
+}
+
+async function submitEval(empId, toDept, rowIndex, newStatus, result) {
+  const deptSkills = skillHeaders.filter(s => s.dept === toDept);
+
+  // บันทึก skill ที่เปลี่ยน
+  let updatedCount = 0;
+  for (const s of deptSkills) {
+    const sel = document.getElementById('eval-skill-' + s.index);
+    if (sel && sel.value !== '') {
+      try {
+        await api('updateSkill', { empId, skillName: s.fullName, value: Number(sel.value) });
+        updatedCount++;
+      } catch(e) {}
+    }
+  }
+
+  // บันทึกผลใน MultiSkillPlan — ไม่คำนวณอัตโนมัติ
+  try {
+    await api('updateMultiSkillPlan', {
+      rowIndex,
+      status: newStatus,
+      result: result,
+      evalDate: new Date().toLocaleDateString('th-TH'),
+      evaluator: 'HR'
+    });
+
+    showToast(`บันทึกผล: ${result} | อัพเดท ${updatedCount} ทักษะ`, 'success');
+    closeModal();
+    loadEvaluation();
+  } catch(e) {}
+}
+
+
+// ============================================================
+// PAGE: DASHBOARD
+// ============================================================
+async function loadDashboard() {
+  const container = document.getElementById('dashboardResult');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลด Dashboard...</div>';
+
+  try {
+    const d = await api('getDashboard');
+
+    let html = '<div class="stats-grid">';
+    html += statCard(d.totalEmployees, 'พนักงานทั้งหมด');
+    html += statCard(d.totalDepartments, 'แผนก');
+    html += statCard(d.avgSkillPerPerson, 'ทักษะเฉลี่ย/คน');
+    html += statCard(d.planStats.training, 'กำลังฝึก');
+    html += statCard(d.planStats.passed, 'ผ่านแล้ว');
+    html += statCard(d.planStats.failed, 'ฝึกต่อ');
+    html += '</div>';
+
+    html += '<div class="card"><h3>🏭 จำนวนพนักงานรายแผนก</h3>';
+    html += '<div class="table-wrap"><table><thead><tr><th>แผนก</th><th>จำนวน</th></tr></thead><tbody>';
+    d.deptSummary.filter(ds => ds.totalEmployees > 0).sort((a, b) => b.totalEmployees - a.totalEmployees).forEach(ds => {
+      html += `<tr><td>${ds.dept}</td><td style="font-weight:600;">${ds.totalEmployees} คน</td></tr>`;
+    });
+    html += '</tbody></table></div></div>';
+
+    container.innerHTML = html;
+  } catch (e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
+}
+
+function statCard(num, label) {
+  return `<div class="stat-card"><div class="num">${num}</div><div class="lbl">${label}</div></div>`;
+}
+
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function formatDate(str) {
+  if (!str || str === '-' || str === 'undefined' || str === 'null') return '-';
+  try {
+    const d = new Date(str);
+    if (isNaN(d.getTime())) return str;
+    const dd = String(d.getDate()).padStart(2,'0');
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const yyyy = d.getFullYear() + 543;
+    return `${dd}/${mm}/${yyyy}`;
+  } catch(e) { return str; }
+}
+
+function getSkillClass(val) {
+  if (val >= 1) return '100';
+  if (val >= 0.75) return '75';
+  if (val >= 0.5) return '50';
+  if (val >= 0.25) return '25';
+  return '0';
+}
+
+function esc(str) {
+  return String(str).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+
+function showToast(msg, type = '') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show ' + type;
+  setTimeout(() => el.className = 'toast', 3000);
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+}
+
+// ============================================================
+// AUTO-RESTORE ROLE
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('nisto_role');
+  if (saved && roleConfig[saved]) {
+    selectRole(saved);
+  }
+});
+</script>
+</body>
+</html>
