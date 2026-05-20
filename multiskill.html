@@ -447,7 +447,7 @@ tr:hover { background: var(--primary-bg); }
 const API_URL = 'https://script.google.com/macros/s/AKfycbwx3_7CO8rstpXf2smxc65-gzUEzGdK39pqEtwGqfIOvdRnLWo7hhoYXWUwl9whktjR/exec';
 
 // FIX #4: ลิงก์ Google Sheet สำหรับ HR — ใส่ URL Sheet จริงตรงนี้
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ccxDRE9SO-BRVsHif-4LncD6oXwFBp_ZZic2qPSS0TU/edit?gid=1436653187#gid=1436653187';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/edit';
 
 // FIX #6: กะแต่ละแผนก
 const DEPT_SHIFT = {
@@ -801,7 +801,8 @@ async function loadSkillMatrix() {
 
     // Header row 1: แผนก groups
     html += '<thead><tr>';
-    html += '<th rowspan="2" style="position:sticky;left:0;z-index:4;background:var(--gray-50);min-width:160px;">ชื่อ</th>';
+    html += '<th rowspan="2" style="position:sticky;left:0;z-index:4;background:var(--gray-50);min-width:50px;">รหัส</th>';
+    html += '<th rowspan="2" style="position:sticky;left:50px;z-index:4;background:var(--gray-50);min-width:140px;">ชื่อ</th>';
     html += '<th rowspan="2" style="z-index:3;background:var(--gray-50);">แผนก</th>';
     html += '<th rowspan="2" style="z-index:3;background:var(--gray-50);">รวม</th>';
     groups.forEach(g => {
@@ -825,7 +826,8 @@ async function loadSkillMatrix() {
     html += '<tbody>';
     data.forEach(emp => {
       html += `<tr>`;
-      html += `<td style="position:sticky;left:0;background:#fff;white-space:nowrap;font-size:13px;z-index:1;">${emp.name}</td>`;
+      html += `<td style="position:sticky;left:0;background:#fff;font-size:13px;z-index:1;">${emp.id}</td>`;
+      html += `<td style="position:sticky;left:50px;background:#fff;white-space:nowrap;font-size:13px;z-index:1;">${emp.name}</td>`;
       html += `<td style="font-size:12px;">${emp.dept}</td>`;
       html += `<td style="text-align:center;font-weight:600;">${emp.skillCount}</td>`;
       displaySkills.forEach((s, idx) => {
