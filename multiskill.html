@@ -200,6 +200,7 @@ tr:hover { background: var(--primary-bg); }
   animation: spin 0.8s linear infinite; margin-right: 10px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(231,76,60,0); } 50% { box-shadow: 0 0 0 6px rgba(231,76,60,0.4); } }
 
 /* Toast */
 .toast {
@@ -249,6 +250,10 @@ tr:hover { background: var(--primary-bg); }
 /* Empty state */
 .empty { text-align: center; padding: 40px 20px; color: var(--gray-500); }
 .empty .icon { font-size: 48px; margin-bottom: 12px; }
+
+/* Myanmar bilingual labels */
+.mm { font-size: 11px; color: var(--gray-500); font-weight: 400; }
+h3 .mm { font-size: 12px; }
 </style>
 </head>
 <body>
@@ -260,8 +265,8 @@ tr:hover { background: var(--primary-bg); }
   <div class="role-cards">
     <div class="role-card" onclick="selectRole('supervisor')">
       <div class="icon">👷</div>
-      <h3>หัวหน้างาน</h3>
-      <p>กรอกข้อมูลย้ายแผนก<br>สำหรับจัดกำลังคนรายวัน</p>
+      <h3>หัวหน้างาน<br><span class="mm" style="font-size:13px;">ကြီးကြပ်ရေးမှူး</span></h3>
+      <p>กรอกข้อมูลย้ายแผนก<br>สำหรับจัดกำลังคนรายวัน<br><span class="mm">ဌာနပြောင်းရေးနှင့် OT မှတ်တမ်း</span></p>
     </div>
     <div class="role-card" onclick="selectRole('manager')">
       <div class="icon">📊</div>
@@ -284,6 +289,9 @@ tr:hover { background: var(--primary-bg); }
       <span class="role-badge" id="roleBadge"></span>
     </div>
     <div style="display:flex;align-items:center;gap:8px;">
+      <input type="text" id="globalUserId" placeholder="รหัส / ကုဒ်" inputmode="numeric"
+        style="width:120px;padding:5px 10px;border:2px solid rgba(255,255,255,0.4);border-radius:6px;font-size:13px;background:rgba(255,255,255,0.15);color:#fff;font-family:inherit;"
+        onchange="localStorage.setItem('nisto_user_id',this.value.trim())" title="กรอกรหัสพนักงานของคุณ / သင့်ဝန်ထမ်းကုဒ်ထည့်ပါ">
       <button class="btn-logout" id="btnSheet" onclick="openSheet()" style="display:none;">📋 เปิด Sheet</button>
       <button class="btn-logout" onclick="logout()">เปลี่ยนบทบาท</button>
     </div>
@@ -295,34 +303,29 @@ tr:hover { background: var(--primary-bg); }
     <!-- PAGE: จัดกำลังคน (Transfer) -->
     <div class="page" id="page-transfer">
       <div class="card">
-        <h3>📋 ย้ายแผนกรายวัน</h3>
+        <h3>📋 ย้ายแผนกรายวัน <span class="mm">ဌာနပြောင်းရေးမှတ်တမ်း</span></h3>
         <div class="form-row">
           <div>
-            <label>วันที่</label>
+            <label>วันที่ <span class="mm">ရက်စွဲ</span></label>
             <input type="date" id="tfDate">
           </div>
           <div>
-            <label>แผนกต้นทาง</label>
+            <label>แผนกต้นทาง <span class="mm">မူလဌာန</span></label>
             <select id="tfFromDept" onchange="onFromDeptChange()">
-              <option value="">-- เลือกแผนก --</option>
+              <option value="">-- เลือกแผนก / ဌာနရွေးပါ --</option>
             </select>
           </div>
           <div>
-            <label>แผนกปลายทาง</label>
+            <label>แผนกปลายทาง <span class="mm">သွားမည့်ဌာန</span></label>
             <select id="tfToDept" onchange="onToDeptChange()">
-              <option value="">-- เลือกแผนก --</option>
+              <option value="">-- เลือกแผนก / ဌာနရွေးပါ --</option>
             </select>
           </div>
         </div>
-        <!-- FIX #2: เปลี่ยนจากชื่อ → รหัสพนักงาน -->
         <div id="tfRecorderRow" class="form-row" style="display:none;">
           <div>
-            <label>รหัสผู้บันทึก</label>
-            <input type="text" id="tfRecorder" placeholder="รหัสพนักงานผู้บันทึก" inputmode="numeric">
-          </div>
-          <div>
-            <label>หมายเหตุ</label>
-            <input type="text" id="tfNote" placeholder="หมายเหตุ (ถ้ามี)">
+            <label>หมายเหตุ <span class="mm">မှတ်ချက်</span></label>
+            <input type="text" id="tfNote" placeholder="หมายเหตุ (ถ้ามี) / မှတ်ချက် (ရှိလျှင်)">
           </div>
         </div>
         <!-- FIX #6: แจ้งเตือนกะ -->
@@ -425,6 +428,62 @@ tr:hover { background: var(--primary-bg); }
       <div id="evalResult"></div>
     </div>
 
+    <!-- PAGE: OT Log (บันทึกออกโอที / โดดโอที) -->
+    <div class="page" id="page-ot">
+      <div class="card">
+        <h3>⏰ บันทึกออกโอที / โดดโอที <span class="mm">OT မှတ်တမ်း</span></h3>
+        <div class="form-row">
+          <div>
+            <label>วันที่ <span class="mm">ရက်စွဲ</span></label>
+            <input type="date" id="otDate">
+          </div>
+          <div>
+            <label>แผนก <span class="mm">ဌာန</span></label>
+            <select id="otDept" onchange="loadOTEmployees()">
+              <option value="">-- เลือกแผนก / ဌာနရွေးပါ --</option>
+            </select>
+          </div>
+          <div>
+            <label>ประเภท <span class="mm">အမျိုးအစား</span></label>
+            <select id="otType">
+              <option value="ออกโอที">🚪 ออกโอที / OT မလုပ်</option>
+              <option value="โดดโอที">❌ โดดโอที / OT ပျက်ကွက်</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div>
+            <label>หมายเหตุ <span class="mm">မှတ်ချက်</span></label>
+            <input type="text" id="otNote" placeholder="หมายเหตุ (ถ้ามี) / မှတ်ချက် (ရှိလျှင်)">
+          </div>
+        </div>
+      </div>
+
+      <!-- รายชื่อพนักงาน checkbox -->
+      <div id="otEmployeeList"></div>
+
+      <!-- สรุป OT -->
+      <div class="card">
+        <h3>📊 สรุปสถิติ OT</h3>
+        <div class="form-row">
+          <div>
+            <label>กรองตามแผนก</label>
+            <select id="otSumDept" onchange="loadOTSummary()">
+              <option value="">-- ทุกแผนก --</option>
+            </select>
+          </div>
+          <div style="display:flex;align-items:flex-end;" id="otExportBtn"></div>
+        </div>
+      </div>
+      <div id="otSummaryResult"></div>
+
+      <!-- Log รายการ -->
+      <div class="card">
+        <h3>📝 รายการบันทึกล่าสุด</h3>
+      </div>
+      <div id="otLogResult"></div>
+    </div>
+
     <!-- PAGE: Dashboard -->
     <div class="page" id="page-dashboard">
       <div id="dashboardResult"></div>
@@ -447,7 +506,7 @@ tr:hover { background: var(--primary-bg); }
 const API_URL = 'https://script.google.com/macros/s/AKfycbwx3_7CO8rstpXf2smxc65-gzUEzGdK39pqEtwGqfIOvdRnLWo7hhoYXWUwl9whktjR/exec';
 
 // FIX #4: ลิงก์ Google Sheet สำหรับ HR — ใส่ URL Sheet จริงตรงนี้
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID_HERE/edit';
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1ccxDRE9SO-BRVsHif-4LncD6oXwFBp_ZZic2qPSS0TU/edit';
 
 // FIX #6: กะแต่ละแผนก
 const DEPT_SHIFT = {
@@ -463,15 +522,17 @@ function getShift(dept) { return DEPT_SHIFT[dept] || 'A1'; }
 let currentRole = '';
 let departments = [];
 let skillHeaders = [];
+let activeMultiSkill = {}; // คนที่กำลังฝึก multi-skill
 
 // ============================================================
 // ROLE MANAGEMENT — FIX #5: เปลี่ยนชื่อ
 // ============================================================
 const roleConfig = {
   supervisor: {
-    label: 'หัวหน้างาน',
+    label: 'หัวหน้างาน / ကြီးကြပ်ရေးမှူး',
     tabs: [
-      { id: 'transfer', label: '📋 ย้ายแผนก' }
+      { id: 'transfer', label: '📋 ย้ายแผนก / ဌာနပြောင်း' },
+      { id: 'ot', label: '⏰ บันทึก OT / OT မှတ်တမ်း' },
     ]
   },
   manager: {
@@ -480,6 +541,7 @@ const roleConfig = {
       { id: 'transfer', label: '📋 ย้ายแผนก' },
       { id: 'skills', label: '📊 Skill Matrix' },
       { id: 'gap', label: '🔍 Skill Gap' },
+      { id: 'ot', label: '⏰ บันทึก OT' },
     ]
   },
   hr: {
@@ -491,6 +553,7 @@ const roleConfig = {
       { id: 'log', label: '📝 Transfer Log' },
       { id: 'plan', label: '📅 แผน Multi-Skill' },
       { id: 'eval', label: '✅ ประเมิน' },
+      { id: 'ot', label: '⏰ บันทึก OT' },
       { id: 'dashboard', label: '📈 Dashboard' },
     ]
   }
@@ -542,6 +605,7 @@ function switchTab(pageId, btn) {
   if (pageId === 'log') loadTransferLog();
   if (pageId === 'plan') loadMultiSkillPlan();
   if (pageId === 'eval') loadEvaluation();
+  if (pageId === 'ot') initOTPage();
   if (pageId === 'dashboard') loadDashboard();
 }
 
@@ -574,17 +638,31 @@ async function initApp() {
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('tfDate').value = today;
 
+  // โหลดรหัสจาก localStorage
+  const savedId = localStorage.getItem('nisto_user_id');
+  if (savedId) {
+    document.getElementById('globalUserId').value = savedId;
+  } else {
+    // แจ้งเตือนให้กรอกรหัส
+    setTimeout(() => {
+      showToast('กรุณากรอกรหัสของคุณที่มุมขวาบน / ညာဘက်အပေါ်ထောင့်တွင် သင့်ကုဒ်ထည့်ပါ', 'error');
+      document.getElementById('globalUserId').style.borderColor = '#e74c3c';
+      document.getElementById('globalUserId').style.animation = 'pulse 1s 3';
+    }, 500);
+  }
+
   try {
     departments = await api('getDepartments');
     populateDeptSelects();
     skillHeaders = await api('getSkillHeaders');
+    activeMultiSkill = await api('getActiveMultiSkill') || {};
   } catch (e) {
     console.error('Init error:', e);
   }
 }
 
 function populateDeptSelects() {
-  const selects = ['tfFromDept', 'tfToDept', 'smDept', 'smSkillDept'];
+  const selects = ['tfFromDept', 'tfToDept', 'smDept', 'smSkillDept', 'otDept', 'otSumDept'];
   selects.forEach(id => {
     const el = document.getElementById(id);
     if (!el) return;
@@ -663,15 +741,17 @@ async function loadTransferCandidates() {
 }
 
 function renderSimpleEmployeeList(employees, from, to) {
-  if (!employees.length) return '<div class="card empty"><div class="icon">👤</div>ไม่มีพนักงานในแผนกนี้</div>';
+  if (!employees.length) return '<div class="card empty"><div class="icon">👤</div>ไม่มีพนักงานในแผนกนี้<br><span class="mm">ဤဌာနတွင် ဝန်ထမ်းမရှိပါ</span></div>';
 
-  let html = '<div class="card"><h3>👤 เลือกพนักงานที่จะย้าย</h3>';
-  html += '<div class="table-wrap"><table><thead><tr><th>รหัส</th><th>ชื่อ</th><th></th></tr></thead><tbody>';
+  let html = '<div class="card"><h3>👤 เลือกพนักงานที่จะย้าย <span class="mm">ပြောင်းမည့်ဝန်ထမ်းရွေးပါ</span></h3>';
+  html += '<div class="table-wrap"><table><thead><tr><th>รหัส<br><span class="mm">ကုဒ်</span></th><th>ชื่อ<br><span class="mm">အမည်</span></th><th></th></tr></thead><tbody>';
   employees.forEach(emp => {
+    const ms = activeMultiSkill[emp.id];
+    const msBadge = ms ? ` <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${ms.status==='กำลังฝึก'?'var(--primary-bg)':'var(--warning-bg)'};color:${ms.status==='กำลังฝึก'?'var(--primary)':'#e67e22'};">📌 ${ms.fromDept}→${ms.toDept}</span>` : '';
     html += `<tr>
       <td>${emp.id}</td>
-      <td>${emp.name}</td>
-      <td><button class="btn btn-primary btn-sm" onclick="confirmTransfer('${emp.id}','${esc(emp.name)}','${esc(from)}','${esc(to)}')">ย้าย →</button></td>
+      <td>${emp.name}${msBadge}</td>
+      <td><button class="btn btn-primary btn-sm" onclick="confirmTransfer('${emp.id}','${esc(emp.name)}','${esc(from)}','${esc(to)}')">ย้าย / ပြောင်း →</button></td>
     </tr>`;
   });
   html += '</tbody></table></div></div>';
@@ -694,9 +774,11 @@ function renderTransferCandidates(data, from, to) {
 
   employees.forEach(emp => {
     const matchColor = emp.matchScore >= 50 ? 'var(--success)' : emp.matchScore > 0 ? 'var(--warning)' : 'var(--gray-400)';
+    const ms = activeMultiSkill[emp.id];
+    const msBadge = ms ? ` <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${ms.status==='กำลังฝึก'?'var(--primary-bg)':'var(--warning-bg)'};color:${ms.status==='กำลังฝึก'?'var(--primary)':'#e67e22'};">📌 ${ms.fromDept}→${ms.toDept}</span>` : '';
     html += `<tr>
       <td>${emp.id}</td>
-      <td>${emp.name}</td>
+      <td>${emp.name}${msBadge}</td>
       <td>${emp.targetSkillCount}/${emp.targetSkillTotal}</td>
       <td><span class="skill-badge skill-${getSkillClass(emp.targetSkillAvg / 100)}">${emp.targetSkillAvg}%</span></td>
       <td>
@@ -713,11 +795,11 @@ function renderTransferCandidates(data, from, to) {
 
 async function confirmTransfer(empId, empName, from, to) {
   const date = document.getElementById('tfDate').value;
-  const recorder = document.getElementById('tfRecorder').value.trim();
+  const recorder = document.getElementById('globalUserId').value.trim();
   const note = document.getElementById('tfNote').value;
 
   if (!date) { showToast('กรุณาเลือกวันที่', 'error'); return; }
-  if (!recorder) { showToast('กรุณากรอกรหัสผู้บันทึก', 'error'); return; }
+  if (!recorder) { showToast('กรุณากรอกรหัสของคุณที่มุมขวาบน / ညာဘက်အပေါ်ထောင့်တွင် သင့်ကုဒ်ထည့်ပါ', 'error'); return; }
 
   // FIX #6: เพิ่มข้อมูลกะใน note ถ้ากะเปลี่ยน
   const shiftFrom = getShift(from);
@@ -827,7 +909,9 @@ async function loadSkillMatrix() {
     data.forEach(emp => {
       html += `<tr>`;
       html += `<td style="position:sticky;left:0;background:#fff;font-size:13px;z-index:1;">${emp.id}</td>`;
-      html += `<td style="position:sticky;left:50px;background:#fff;white-space:nowrap;font-size:13px;z-index:1;">${emp.name}</td>`;
+      const ms = activeMultiSkill[emp.id];
+      const msBadge = ms ? ` <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:${ms.status==='กำลังฝึก'?'var(--primary-bg)':'var(--warning-bg)'};color:${ms.status==='กำลังฝึก'?'var(--primary)':'#e67e22'};">📌 ${ms.fromDept}→${ms.toDept}</span>` : '';
+      html += `<td style="position:sticky;left:50px;background:#fff;white-space:nowrap;font-size:13px;z-index:1;">${emp.name}${msBadge}</td>`;
       html += `<td style="font-size:12px;">${emp.dept}</td>`;
       html += `<td style="text-align:center;font-weight:600;">${emp.skillCount}</td>`;
       displaySkills.forEach((s, idx) => {
@@ -1148,7 +1232,7 @@ async function openEvalModal(empId, empName, toDept, rowIndex) {
   html += `<div style="border-top:1px solid var(--gray-200);padding-top:16px;">
     <label>ผลตัดสิน (HR ตัดสินเอง)</label>
     <div style="display:flex;gap:10px;margin-top:8px;">
-      <button class="btn btn-success" onclick="submitEval('${empId}','${esc(toDept)}',${rowIndex},'ผ่านแล้ว','ผ่าน')" style="flex:1;">✅ ผ่าน</button>
+      <button class="btn btn-success" onclick="submitEval('${empId}','${esc(toDept)}',${rowIndex},'ผ่านแล้ว','ผ่าน')" style="flex:1;">✅ ผ่าน (กลับแผนก)</button>
       <button class="btn btn-warning" onclick="submitEval('${empId}','${esc(toDept)}',${rowIndex},'ฝึกต่อ','ไม่ผ่าน')" style="flex:1;">🔄 ฝึกต่อ</button>
     </div>
   </div>`;
@@ -1187,6 +1271,269 @@ async function submitEval(empId, toDept, rowIndex, newStatus, result) {
     closeModal();
     loadEvaluation();
   } catch(e) {}
+}
+
+
+// ============================================================
+// PAGE: OT LOG (ออกโอที / โดดโอที)
+// ============================================================
+function initOTPage() {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('otDate').value = today;
+  // HR เห็นปุ่ม Export
+  const exportBtn = document.getElementById('otExportBtn');
+  if (exportBtn) {
+    exportBtn.innerHTML = currentRole === 'hr' ? '<button class="btn btn-success" onclick="exportOTExcel()">📥 Export Excel</button>' : '';
+  }
+  loadOTSummary();
+  loadOTLogList();
+}
+
+async function loadOTEmployees() {
+  const dept = document.getElementById('otDept').value;
+  const container = document.getElementById('otEmployeeList');
+  if (!dept) { container.innerHTML = ''; return; }
+
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลดรายชื่อ...</div>';
+
+  try {
+    const emps = await api('getEmployeesByDept', { dept });
+    if (!emps.length) {
+      container.innerHTML = '<div class="card empty">ไม่มีพนักงานในแผนกนี้</div>';
+      return;
+    }
+
+    let html = '<div class="card">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">';
+    html += `<h3 style="margin-bottom:0;">👤 เลือกพนักงาน <span class="mm">ဝန်ထမ်းရွေးပါ</span> — ${dept} (${emps.length} คน)</h3>`;
+    html += '<div style="display:flex;gap:8px;">';
+    html += '<button class="btn btn-outline btn-sm" onclick="toggleAllOT(true)">เลือกทั้งหมด / အားလုံးရွေး</button>';
+    html += '<button class="btn btn-outline btn-sm" onclick="toggleAllOT(false)">ยกเลิก / ဖယ်ရှား</button>';
+    html += '</div></div>';
+
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;">';
+    emps.forEach(e => {
+      const ms = activeMultiSkill[e.id];
+      const msBadge = ms ? ` <span style="font-size:9px;padding:1px 5px;border-radius:6px;background:${ms.status==='กำลังฝึก'?'var(--primary-bg)':'var(--warning-bg)'};color:${ms.status==='กำลังฝึก'?'var(--primary)':'#e67e22'};">📌 ${ms.fromDept}→${ms.toDept}</span>` : '';
+      html += `<label style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;cursor:pointer;transition:all 0.15s;" 
+        onmouseover="this.style.borderColor='var(--primary-light)'" onmouseout="this.style.borderColor='var(--gray-200)'">
+        <input type="checkbox" class="ot-check" value="${e.id}" data-name="${esc(e.name)}" data-dept="${esc(e.dept)}" style="width:18px;height:18px;accent-color:var(--primary);">
+        <span style="font-size:13px;"><strong>${e.id}</strong> ${e.name}${msBadge}</span>
+      </label>`;
+    });
+    html += '</div>';
+
+    html += '<div style="margin-top:14px;display:flex;gap:10px;align-items:center;">';
+    html += '<button class="btn btn-danger" onclick="submitOTLog()">บันทึก / မှတ်တမ်းတင်</button>';
+    html += '<span id="otSelectedCount" style="font-size:13px;color:var(--gray-600);">เลือก 0 คน / ရွေးထား 0 ယောက်</span>';
+    html += '</div></div>';
+
+    container.innerHTML = html;
+
+    // อัพเดทจำนวนที่เลือก
+    container.querySelectorAll('.ot-check').forEach(cb => {
+      cb.addEventListener('change', updateOTCount);
+    });
+  } catch(e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
+}
+
+function toggleAllOT(checked) {
+  document.querySelectorAll('.ot-check').forEach(cb => cb.checked = checked);
+  updateOTCount();
+}
+
+function updateOTCount() {
+  const count = document.querySelectorAll('.ot-check:checked').length;
+  const el = document.getElementById('otSelectedCount');
+  if (el) el.textContent = `เลือก ${count} คน / ရွေးထား ${count} ယောက်`;
+}
+
+async function submitOTLog() {
+  const date = document.getElementById('otDate').value;
+  const dept = document.getElementById('otDept').value;
+  const type = document.getElementById('otType').value;
+  const recorder = document.getElementById('globalUserId').value.trim();
+  const note = document.getElementById('otNote').value;
+
+  if (!recorder) { showToast('กรุณากรอกรหัสของคุณที่มุมขวาบน / ညာဘက်အပေါ်ထောင့်တွင် သင့်ကုဒ်ထည့်ပါ', 'error'); return; }
+  if (!date) { showToast('กรุณาเลือกวันที่', 'error'); return; }
+  if (!dept) { showToast('กรุณาเลือกแผนก', 'error'); return; }
+
+  const checked = document.querySelectorAll('.ot-check:checked');
+  if (!checked.length) { showToast('กรุณาเลือกพนักงานอย่างน้อย 1 คน', 'error'); return; }
+
+  const entries = [];
+  checked.forEach(cb => {
+    entries.push({
+      date, empId: cb.value, empName: cb.dataset.name, dept: cb.dataset.dept || dept,
+      type, recorder, note
+    });
+  });
+
+  const typeLabel = type === 'ออกโอที' ? '🚪 ออกโอที' : '❌ โดดโอที';
+  const names = entries.map(e => `${e.empId} ${e.empName}`).join('\n');
+  if (!confirm(`ยืนยันบันทึก ${typeLabel}\n${entries.length} คน\nวันที่: ${date}\n\n${names}`)) return;
+
+  try {
+    await api('addOTLog', { entries });
+    showToast(`บันทึก ${type} — ${entries.length} คน สำเร็จ`, 'success');
+    // ยกเลิก checkbox ทั้งหมด
+    document.querySelectorAll('.ot-check').forEach(cb => cb.checked = false);
+    updateOTCount();
+    document.getElementById('otNote').value = '';
+    loadOTSummary();
+    loadOTLogList();
+  } catch(e) {}
+}
+
+let lastOTSummaryData = []; // เก็บไว้สำหรับ export
+
+async function loadOTSummary() {
+  const container = document.getElementById('otSummaryResult');
+  const dept = document.getElementById('otSumDept')?.value || '';
+
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลด...</div>';
+
+  try {
+    // ดึง OT summary (เฉพาะคนที่มีบันทึก)
+    const otData = await api('getOTSummary', { dept: dept || undefined });
+
+    if (currentRole === 'hr') {
+      // HR: แสดงพนักงานทั้งหมด รวมคนที่ 0 ครั้ง
+      const allEmps = await api('getEmployees', { dept: dept || undefined });
+      const otMap = {};
+      otData.forEach(r => otMap[r.empId] = r);
+
+      const merged = allEmps.map(e => {
+        const ot = otMap[e.id];
+        return {
+          empId: e.id, empName: e.name, dept: e.dept,
+          skipOT: ot ? ot.skipOT : 0,
+          noShowOT: ot ? ot.noShowOT : 0,
+          total: ot ? ot.total : 0
+        };
+      });
+      // เรียงตาม total มากไปน้อย แล้ว dept แล้ว ชื่อ
+      merged.sort((a, b) => b.total - a.total || a.dept.localeCompare(b.dept) || a.empName.localeCompare(b.empName));
+      lastOTSummaryData = merged;
+      renderOTSummaryTable(container, merged);
+    } else {
+      // หัวหน้างาน/จัดกำลังคน: แสดงเฉพาะคนที่มีบันทึก
+      lastOTSummaryData = otData;
+      if (!otData.length) {
+        container.innerHTML = '<div class="card empty"><div class="icon">✅</div>ยังไม่มีข้อมูล</div>';
+        return;
+      }
+      renderOTSummaryTable(container, otData);
+    }
+  } catch(e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
+}
+
+function renderOTSummaryTable(container, data) {
+  if (!data.length) {
+    container.innerHTML = '<div class="card empty"><div class="icon">✅</div>ยังไม่มีข้อมูล</div>';
+    return;
+  }
+
+  let html = '';
+
+  // Top 10 ออกโอทีมากสุด
+  const top10 = [...data].filter(r => r.total > 0).sort((a, b) => b.total - a.total).slice(0, 10);
+  if (top10.length) {
+    html += '<div class="card"><h3>🔴 Top 10 ออก/โดดโอทีมากที่สุด</h3>';
+    html += '<div class="table-wrap"><table>';
+    html += '<thead><tr><th>อันดับ</th><th>รหัส</th><th>ชื่อ</th><th>แผนก</th><th>ออกโอที</th><th>โดดโอที</th><th>รวม</th></tr></thead>';
+    html += '<tbody>';
+    top10.forEach((row, i) => {
+      html += `<tr style="background:${i < 3 ? '#fdedec' : '#fef9e7'};">
+        <td style="text-align:center;font-weight:700;">${i + 1}</td>
+        <td>${row.empId}</td><td>${row.empName}</td><td>${row.dept}</td>
+        <td style="text-align:center;"><span class="skill-badge skill-50">${row.skipOT}</span></td>
+        <td style="text-align:center;"><span class="skill-badge skill-25">${row.noShowOT}</span></td>
+        <td style="text-align:center;font-weight:700;color:var(--danger);font-size:16px;">${row.total}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div></div>';
+  }
+
+  // ตารางทั้งหมด
+  html += '<div class="card"><h3>📋 รายชื่อทั้งหมด (' + data.length + ' คน)</h3><div class="table-wrap"><table>';
+  html += '<thead><tr><th>รหัส</th><th>ชื่อ</th><th>แผนก</th><th>ออกโอที</th><th>โดดโอที</th><th>รวม</th></tr></thead>';
+  html += '<tbody>';
+  data.forEach(row => {
+    const danger = row.total >= 3;
+    const warn = row.total >= 1 && row.total < 3;
+    html += `<tr${danger ? ' style="background:#fdedec;"' : warn ? ' style="background:#fef9e7;"' : ''}>
+      <td>${row.empId}</td><td>${row.empName}</td><td>${row.dept}</td>
+      <td style="text-align:center;"><span class="skill-badge skill-${row.skipOT > 0 ? '50' : '0'}">${row.skipOT}</span></td>
+      <td style="text-align:center;"><span class="skill-badge skill-${row.noShowOT > 0 ? '25' : '0'}">${row.noShowOT}</span></td>
+      <td style="text-align:center;font-weight:700;color:${danger ? 'var(--danger)' : 'var(--gray-700)'};">${row.total}</td>
+    </tr>`;
+  });
+  html += '</tbody></table></div></div>';
+  container.innerHTML = html;
+}
+
+function exportOTExcel() {
+  if (!lastOTSummaryData.length) { showToast('ไม่มีข้อมูลให้ export', 'error'); return; }
+
+  // สร้าง CSV content (Excel เปิดได้)
+  const BOM = '\uFEFF'; // UTF-8 BOM สำหรับ Excel อ่านภาษาไทย
+  let csv = BOM;
+  csv += 'รหัส,ชื่อ,แผนก,ออกโอที,โดดโอที,รวม\n';
+  lastOTSummaryData.forEach(row => {
+    csv += `${row.empId},"${row.empName}","${row.dept}",${row.skipOT},${row.noShowOT},${row.total}\n`;
+  });
+
+  // Download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const today = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `OT_Summary_${today}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showToast('ดาวน์โหลดสำเร็จ', 'success');
+}
+
+async function loadOTLogList() {
+  const container = document.getElementById('otLogResult');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div>กำลังโหลด...</div>';
+
+  try {
+    const data = await api('getOTLog', {});
+
+    if (!data.length) {
+      container.innerHTML = '<div class="card empty"><div class="icon">📝</div>ยังไม่มีรายการ</div>';
+      return;
+    }
+
+    // แสดงแค่ 50 รายการล่าสุด
+    const recent = data.slice(0, 50);
+    let html = '<div class="card"><div class="table-wrap"><table>';
+    html += '<thead><tr><th>วันที่</th><th>รหัส</th><th>ชื่อ</th><th>แผนก</th><th>ประเภท</th><th>ผู้บันทึก</th><th>หมายเหตุ</th></tr></thead>';
+    html += '<tbody>';
+    recent.forEach(row => {
+      const typeColor = row.type === 'โดดโอที' ? 'status-failed' : 'status-continue';
+      html += `<tr>
+        <td style="white-space:nowrap;">${formatDate(row.date)}</td>
+        <td>${row.empId}</td><td>${row.empName}</td><td>${row.dept}</td>
+        <td><span class="status ${typeColor}">${row.type}</span></td>
+        <td>${row.recorder}</td><td style="font-size:13px;">${row.note || ''}</td>
+      </tr>`;
+    });
+    html += '</tbody></table></div></div>';
+    container.innerHTML = html;
+  } catch(e) {
+    container.innerHTML = '<div class="card empty">โหลดข้อมูลไม่สำเร็จ</div>';
+  }
 }
 
 
